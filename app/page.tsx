@@ -2,8 +2,8 @@
 
 import { isAxiosError } from "axios";
 import classNames from "classnames";
-import _ from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import _, { result } from "lodash";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WordDto } from "./dto";
 import { dictHttp } from "./http";
 import styles from "./page.module.css";
@@ -67,14 +67,14 @@ interface WordGroups {
   meaning?: string;
 }
 async function wordToData(wordCode: string): Promise<Data | null> {
-  const matches = /^(?<word>[a-zA-Z ]+)(?<meanNum>\d+)?(?:_(?<defNum>\d+))?(\|(?<add>\+)?(?<meaning>.*))?$/.exec(
-    wordCode
-  );
-  console.log(wordCode, matches?.groups)
+  const matches =
+    /^(?<word>[a-zA-Z ]+)(?<meanNum>\d+)?(?:_(?<defNum>\d+))?(\|(?<add>\+)?(?<meaning>.*))?$/.exec(
+      wordCode
+    );
   if (matches === null || matches.groups === undefined) return null;
 
-
-  const { word, meanNum, defNum, add, meaning } = matches.groups as unknown as WordGroups;
+  const { word, meanNum, defNum, add, meaning } =
+    matches.groups as unknown as WordGroups;
 
   const pMeanNum = meanNum === undefined ? undefined : parseInt(meanNum);
   const pDefNum = defNum === undefined ? undefined : parseInt(defNum);
@@ -85,7 +85,8 @@ async function wordToData(wordCode: string): Promise<Data | null> {
       const data = await getWordInfo(word);
       if (data === null) return null;
 
-      const def = data.meanings[pMeanNum ?? 0]?.definitions[pDefNum ?? 0]?.definition;
+      const def =
+        data.meanings[pMeanNum ?? 0]?.definitions[pDefNum ?? 0]?.definition;
       return {
         word: word,
         definition: def === undefined ? meaningOrNA : meaningOrNA + " | " + def,
@@ -101,7 +102,9 @@ async function wordToData(wordCode: string): Promise<Data | null> {
     if (data) {
       return {
         word: word,
-        definition: data.meanings[pMeanNum ?? 0]?.definitions[pDefNum ?? 0]?.definition ?? "N/A",
+        definition:
+          data.meanings[pMeanNum ?? 0]?.definitions[pDefNum ?? 0]?.definition ??
+          "N/A",
       };
     } else {
       return null;
@@ -112,6 +115,7 @@ async function wordToData(wordCode: string): Promise<Data | null> {
 }
 
 const lastTextKey = "lastText";
+const scrollFollowThreshould = 20;
 export default function Home() {
   const [text, setText] = useState("");
   const [response, setResponse] = useState("");
@@ -126,6 +130,20 @@ export default function Home() {
     }
   }, []);
 
+  const tryFollowScroll = () => {
+    setTimeout(() => {
+      if (resultRef.current === null) return;
+  
+      const cur = resultRef.current;
+  
+      const curOffset = cur.scrollHeight - cur.scrollTop - cur.clientHeight;
+      if (curOffset <= scrollFollowThreshould) {
+        console.log(curOffset);
+        cur.scrollTo({ top: cur.scrollHeight - cur.clientHeight});
+      }
+    })
+  };
+
   const updateResponse = async (text: string) => {
     const responseObjs = (
       await Promise.all(
@@ -139,6 +157,8 @@ export default function Home() {
       responseObjs as unknown as Record<string, string>[]
     );
     setResponse(newResponse);
+
+    tryFollowScroll();
   };
 
   const saveText = (text: string) => {
@@ -177,6 +197,8 @@ export default function Home() {
     localStorage.removeItem(lastTextKey);
   };
 
+  const resultRef = useRef<HTMLPreElement>(null);
+
   return (
     <div className={classNames(styles.content, { [styles.stale]: loading })}>
       <textarea
@@ -185,7 +207,7 @@ export default function Home() {
         onChange={(e) => onChange(e.target.value)}
       />
       <div className={styles.result}>
-        <pre>{response}</pre>
+        <pre ref={resultRef}>{response}</pre>
       </div>
       <div>
         <button onClick={onDownloadClick}>Download</button>
