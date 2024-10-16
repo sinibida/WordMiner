@@ -44,7 +44,7 @@ function toCSV(objs: Record<string, string>[]): string {
 // https://github.com/Pseudo-Corp/SynergismOfficial/blob/5838bf12905fd55ba63ced9e86967d12db59d48d/src/ImportExport.ts#L214
 function download(text: string, fileName: string) {
   const a = document.createElement("a");
-  a.setAttribute("href", `data:text/plain;charset=utf-8,${text}`);
+  a.setAttribute("href", `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
   a.setAttribute("download", fileName);
   a.setAttribute("id", "downloadSave");
   // "Starting in Firefox 75, the click() function works even when the element is not attached to a DOM tree."
@@ -190,7 +190,7 @@ export default function Home() {
   );
 
   const onDownloadClick = () => {
-    download(response, `words_${format(new Date(), "yyMMDDHHmmss")}.csv`);
+    download(response, `words_${format(new Date(), "yyMMddHHmmss")}.csv`);
   };
 
   const onResetClick = () => {
