@@ -4,16 +4,31 @@
   align-items: stretch;
   align-self: stretch;
   flex: 1;
-  padding: 24px 24px;
+}
+
+.textareaContainer {
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .textarea {
-  width: 256px;
+  flex: 1;
   resize: none;
   font-family: monospace;
   font-size: 12px;
   margin: 0;
   padding: 8px;
+}
+
+.buttons {
+  display: flex;
+  gap: 4px;
+
+  & * {
+    flex: 1
+  }
 }
 
 .result {

@@ -44,7 +44,7 @@ function toCSV(objs: Record<string, string>[]): string {
 // https://github.com/Pseudo-Corp/SynergismOfficial/blob/5838bf12905fd55ba63ced9e86967d12db59d48d/src/ImportExport.ts#L214
 function download(text: string, fileName: string) {
   const a = document.createElement("a");
-  a.setAttribute("href", `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+  a.setAttribute("href", `data:text/csv;charset=utf-8,${encodeURIComponent(text)}`);
   a.setAttribute("download", fileName);
   a.setAttribute("id", "downloadSave");
   // "Starting in Firefox 75, the click() function works even when the element is not attached to a DOM tree."
@@ -201,18 +201,20 @@ export default function Home() {
 
   return (
     <div className={classNames(styles.content, { [styles.stale]: loading })}>
-      <textarea
-        className={styles.textarea}
-        value={text}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <div className={styles.textareaContainer}>
+        <textarea
+          className={styles.textarea}
+          value={text}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <div className={styles.buttons}>
+          <button onClick={onDownloadClick}>CSV Download</button>
+          <br />
+          <button onClick={onResetClick}>Reset</button>
+        </div>
+      </div>
       <div className={styles.result}>
         <pre ref={resultRef}>{response}</pre>
-      </div>
-      <div>
-        <button onClick={onDownloadClick}>Download</button>
-        <br />
-        <button onClick={onResetClick}>Reset</button>
       </div>
     </div>
   );

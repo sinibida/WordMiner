@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 32px;
+  gap: 16px;
+  align-self: stretch;
+  flex: 1;
+}
+
+.container nav {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  & span:nth-child(1) {
+    font-size: 48px;
+    font-weight: 600;
+  }
+  & span:nth-child(2) {
+    font-size: 24px;
+    font-weight: 200;
+    font-style: italic;
+  }
+}
+
+.container main {
+  display: flex;
+  flex-grow: 1;
+}
