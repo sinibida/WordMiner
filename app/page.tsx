@@ -61,22 +61,23 @@ interface Data {
 }
 interface WordGroups {
   word: string;
-  num?: string;
+  meanNum?: string;
+  defNum?: string;
   add?: string;
   meaning?: string;
 }
 async function wordToData(wordCode: string): Promise<Data | null> {
-  const matches = /^(?<word>[a-zA-Z ]+)(?<num>\d+)?(\|(?<add>\+)?(?<meaning>.*))?$/.exec(
+  const matches = /^(?<word>[a-zA-Z ]+)(?<meanNum>\d+)?(?:_(?<defNum>\d+))?(\|(?<add>\+)?(?<meaning>.*))?$/.exec(
     wordCode
   );
   console.log(wordCode, matches?.groups)
   if (matches === null || matches.groups === undefined) return null;
 
 
-  const { word, num, add, meaning } = matches.groups as unknown as WordGroups;
+  const { word, meanNum, defNum, add, meaning } = matches.groups as unknown as WordGroups;
 
-  const parsedNum = num === undefined ? undefined : parseInt(num);
-  if (parsedNum !== undefined && parsedNum < 1) return null;
+  const pMeanNum = meanNum === undefined ? undefined : parseInt(meanNum);
+  const pDefNum = defNum === undefined ? undefined : parseInt(defNum);
 
   if (meaning) {
     const meaningOrNA = meaning === "" ? "N/A" : meaning;
@@ -84,7 +85,7 @@ async function wordToData(wordCode: string): Promise<Data | null> {
       const data = await getWordInfo(word);
       if (data === null) return null;
 
-      const def = data.meanings[parsedNum ?? 0]?.definitions[0]?.definition;
+      const def = data.meanings[pMeanNum ?? 0]?.definitions[pDefNum ?? 0]?.definition;
       return {
         word: word,
         definition: def === undefined ? meaningOrNA : meaningOrNA + " | " + def,
@@ -100,7 +101,7 @@ async function wordToData(wordCode: string): Promise<Data | null> {
     if (data) {
       return {
         word: word,
-        definition: data.meanings[parsedNum ?? 0]?.definitions[0]?.definition ?? "N/A",
+        definition: data.meanings[pMeanNum ?? 0]?.definitions[pDefNum ?? 0]?.definition ?? "N/A",
       };
     } else {
       return null;
