@@ -153,7 +153,7 @@ export default function Home() {
 
   const debouncedOnChange = useMemo(
     () =>
-      _.throttle(debouncedOnChangeHandler, 500, {
+      _.throttle(debouncedOnChangeHandler, 250, {
         trailing: true,
       }),
     []
