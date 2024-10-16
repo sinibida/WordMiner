@@ -11,7 +11,7 @@ import { format } from "date-fns";
 
 async function getWordInfo(word: string): Promise<WordDto | null> {
   try {
-    return (await dictHttp.get(`entries/en/${word}`, {})).data[0];
+    return (await dictHttp.get(`entries/en/${word.toLowerCase()}`, {})).data[0];
   } catch (e) {
     if (isAxiosError(e)) {
       if (e.status === 404) {
@@ -59,44 +59,58 @@ interface Data {
   word: string;
   definition: string;
 }
-async function wordToData(word: string): Promise<Data | null> {
-  const splited = word.split("|");
-  if (splited.length === 1) {
-    const data = await getWordInfo(splited[0]);
+interface WordGroups {
+  word: string;
+  num?: string;
+  add?: string;
+  meaning?: string;
+}
+async function wordToData(wordCode: string): Promise<Data | null> {
+  const matches = /^(?<word>[a-zA-Z ]+)(?<num>\d+)?(\|(?<add>\+)?(?<meaning>.*))?$/.exec(
+    wordCode
+  );
+  console.log(wordCode, matches?.groups)
+  if (matches === null || matches.groups === undefined) return null;
 
+
+  const { word, num, add, meaning } = matches.groups as unknown as WordGroups;
+
+  const parsedNum = num === undefined ? undefined : parseInt(num);
+  if (parsedNum !== undefined && parsedNum < 1) return null;
+
+  if (meaning) {
+    const meaningOrNA = meaning === "" ? "N/A" : meaning;
+    if (add) {
+      const data = await getWordInfo(word);
+      if (data === null) return null;
+
+      const def = data.meanings[parsedNum ?? 0]?.definitions[0]?.definition;
+      return {
+        word: word,
+        definition: def === undefined ? meaningOrNA : meaningOrNA + " | " + def,
+      };
+    } else {
+      return {
+        word: word,
+        definition: meaningOrNA,
+      };
+    }
+  } else {
+    const data = await getWordInfo(word);
     if (data) {
       return {
-        word: data.word,
-        definition: data.meanings[0]?.definitions[0]?.definition ?? "N/A",
+        word: word,
+        definition: data.meanings[parsedNum ?? 0]?.definitions[0]?.definition ?? "N/A",
       };
     } else {
       return null;
-    }
-  } else if (splited.length === 2) {
-    if (splited[1][0] === "+") {
-      const data = await getWordInfo(splited[0]);
-      if (data === null) return null;
-
-      const def = data.meanings[0]?.definitions[0]?.definition;
-      return {
-        word: splited[0],
-        definition:
-          def === undefined
-            ? splited[1].substring(1)
-            : splited[1].substring(1) + " | " + def,
-      };
-    } else {
-      return {
-        word: splited[0],
-        definition: splited[1],
-      };
     }
   }
 
   return null;
 }
 
-const lastTextKey = 'lastText';
+const lastTextKey = "lastText";
 export default function Home() {
   const [text, setText] = useState("");
   const [response, setResponse] = useState("");
@@ -104,12 +118,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadedText = localStorage.getItem(lastTextKey)
+    const loadedText = localStorage.getItem(lastTextKey);
     if (loadedText) {
       setText(loadedText);
       updateResponse(loadedText);
     }
-  }, [])
+  }, []);
 
   const updateResponse = async (text: string) => {
     const responseObjs = (
@@ -117,7 +131,6 @@ export default function Home() {
         text
           .split("\n")
           .filter((x) => !/^\s+$/.test(x))
-          .map((x) => x.toLowerCase())
           .map(wordToData)
       )
     ).filter((x) => x !== null);
@@ -129,7 +142,7 @@ export default function Home() {
 
   const saveText = (text: string) => {
     localStorage.setItem(lastTextKey, text);
-  }
+  };
 
   const debouncedOnChangeHandler = (text: string) => {
     withLoading(setLoading, async () => {
@@ -161,7 +174,7 @@ export default function Home() {
 
   const onResetClick = () => {
     localStorage.removeItem(lastTextKey);
-  }
+  };
 
   return (
     <div className={classNames(styles.content, { [styles.stale]: loading })}>
@@ -174,7 +187,8 @@ export default function Home() {
         <pre>{response}</pre>
       </div>
       <div>
-        <button onClick={onDownloadClick}>Download</button><br/>
+        <button onClick={onDownloadClick}>Download</button>
+        <br />
         <button onClick={onResetClick}>Reset</button>
       </div>
     </div>
