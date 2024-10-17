@@ -2,12 +2,12 @@
 
 import { isAxiosError } from "axios";
 import classNames from "classnames";
-import _, { result } from "lodash";
+import { format } from "date-fns";
+import _ from "lodash";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WordDto } from "./dto";
 import { dictHttp } from "./http";
 import styles from "./page.module.css";
-import { format } from "date-fns";
 
 async function getWordInfo(word: string): Promise<WordDto | null> {
   try {
@@ -44,7 +44,10 @@ function toCSV(objs: Record<string, string>[]): string {
 // https://github.com/Pseudo-Corp/SynergismOfficial/blob/5838bf12905fd55ba63ced9e86967d12db59d48d/src/ImportExport.ts#L214
 function download(text: string, fileName: string) {
   const a = document.createElement("a");
-  a.setAttribute("href", `data:text/csv;charset=utf-8,${encodeURIComponent(text)}`);
+  a.setAttribute(
+    "href",
+    `data:text/csv;charset=utf-8,${encodeURIComponent(text)}`
+  );
   a.setAttribute("download", fileName);
   a.setAttribute("id", "downloadSave");
   // "Starting in Firefox 75, the click() function works even when the element is not attached to a DOM tree."
@@ -133,15 +136,15 @@ export default function Home() {
   const tryFollowScroll = () => {
     setTimeout(() => {
       if (resultRef.current === null) return;
-  
+
       const cur = resultRef.current;
-  
+
       const curOffset = cur.scrollHeight - cur.scrollTop - cur.clientHeight;
       if (curOffset <= scrollFollowThreshould) {
         console.log(curOffset);
-        cur.scrollTo({ top: cur.scrollHeight - cur.clientHeight});
+        cur.scrollTo({ top: cur.scrollHeight - cur.clientHeight });
       }
-    })
+    });
   };
 
   const updateResponse = async (text: string) => {
